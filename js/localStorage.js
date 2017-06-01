@@ -15,31 +15,9 @@ $("#cancel").click(function() {
   togglePageVisibility();
 });
 
-$("#addNewItem").click(function() {
-  togglePageVisibility();
-});
-
-$('#addContact').submit(function(e) {
-  e.preventDefault();
-  
-  var newContact = createNewContact();
-  contacts.push(newContact);
-  saveContacts();
-  updateContactTable();
-  resetForm();
-  togglePageVisibility();
-  
-});
-
-$('#contact-tbody').on('click', '.edit', editContactInTable);
-$('#contact-tbody').on('click', '.delete', deleteContactInTable);
-
-function createNewContact() {
-  return { id: (nextId++).toString(),
-           name: $('#name').val(),
-           phone: $('#phone').val()
-         };
-}
+$("#addNewItem").on('click', addNewContact);
+$('#contact-tbody').on('click', '.edit', editContact);
+$('#contact-tbody').on('click', '.delete', deleteContact);
 
 function resetForm() {
   $('#name').val("");
@@ -93,19 +71,14 @@ function togglePageVisibility() {
   contactsVisible = !contactsVisible;
 }
 
-function editContactInTable(e) {
-  var ix = getContactIndex(e);
-  if (ix >= 0) {
-    editContact(contacts[ix]);
-    updateContactTable();
-  }
+function addNewContact() {
+  createOrEditContact();
 }
 
-function editContact(contact) {
-  if (contact) {
-    $('#name').val(contact.name);
-    $('#phone').val(contact.phone);
-    togglePageVisibility();
+function editContact(e) {
+  var ix = getContactIndex(e);
+  if (ix >= 0) {
+    createOrEditContact(contacts[ix]);
   }
 }
 
@@ -123,12 +96,48 @@ function getContactIndex(e) {
   return -1;
 }
 
-function deleteContactInTable() {
-  
+function deleteContact(e) {
+  var ix = getContactIndex(e);
+  if (ix >= 0) {
+    contacts.splice(ix, 1);
+    updateContactTable();
+    saveContacts();
+  }
 }
 
-function deleteContact() {
+function createOrEditContact(contact) {
+  if (contact) {
+    $('#name').val(contact.name);
+    $('#phone').val(contact.phone);
+  }
+  else {
+    $('#name').val('');
+    $('#phone').val('');
+  }
   
+  $('#submit').one('click', createOrUpdateContact);
+  
+  togglePageVisibility();
+  
+  function createOrUpdateContact(evt) {
+    evt.preventDefault();
+    
+    if (contact) {
+      contact.name = $('#name').val();
+      contact.phone = $('#phone').val();
+    }
+    else {
+      // new contact
+      var newContact = { id: (nextId++).toString(),
+                       name: $('#name').val(),
+                      phone: $('#phone').val()
+      };
+      contacts.push(newContact);
+    }
+    updateContactTable();
+    saveContacts();
+    togglePageVisibility();
+  }
 }
 
 function getContacts() {
